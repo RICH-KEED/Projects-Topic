@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Topic Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .reset-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .projects-container {
+            padding: 30px;
+        }
+
+        .project-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .project-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .project-objective {
+            color: #6c757d;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .project-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .tag-context {
+            background: #e7f5ff;
+            color: #1971c2;
+        }
+
+        .tag-skills {
+            background: #fff4e6;
+            color: #e67700;
+        }
+
+        .tag-area {
+            background: #f3f0ff;
+            color: #7950f2;
+        }
+
+        .tag-person {
+            background: #e6fcf5;
+            color: #087f5b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                gap: 15px;
+            }
+
+            .stat-box {
+                padding: 10px 15px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .project-card {
+                padding: 15px;
+            }
+
+            .project-title {
+                font-size: 1.1em;
+            }
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            font-size: 13px;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        th:hover {
+            background: #5568d3;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tr:hover {
+            background: #e7f1ff;
+        }
+
+        td {
+            max-width: 350px;
+            word-wrap: break-word;
+        }
+
+        td:first-child {
+            font-weight: 500;
+        }
+
+        .sort-indicator {
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: calc(100vh - 480px);
+            overflow-y: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Project Topics Database</h1>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalProjects">0</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="filteredProjects">0</div>
+                    <div class="stat-label">Filtered Results</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="uniqueAreas">0</div>
+                    <div class="stat-label">Focus Areas</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="filter-grid">
+                <div class="filter-section">
+                    <label for="searchInput">🔍 Search Projects</label>
+                    <input type="text" id="searchInput" placeholder="Search by title, objective, or skills...">
+                </div>
+
+                <div class="filter-section">
+                    <label for="contextFilter">📄 Context Type</label>
+                    <select id="contextFilter">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <label for="areaFilter">🎯 Focus Area</label>
+                    <select id="areaFilter">
+                        <option value="">All Areas</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <label for="personFilter">👤 Associated Person</label>
+                    <select id="personFilter">
+                        <option value="">All Persons</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetFilters()">🔄 Reset All Filters</button>
+        </div>
+
+        <div class="projects-container">
+            <div class="view-toggle">
+                <button class="view-btn" onclick="switchView('cards')">📱 Card View</button>
+                <button class="view-btn active" onclick="switchView('table')">📊 Table View</button>
+            </div>
+
+            <div id="cardsView" style="display: none;">
+                <div id="projectsList" class="loading">Loading projects...</div>
+            </div>
+
+            <div id="tableView">
+                <div class="table-wrapper">
+                    <table id="projectsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('title', event)" style="width: 30%;">Project Title <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('objective', event)" style="width: 25%;">Objective <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('context', event)" style="width: 12%;">Context <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('skills', event)" style="width: 15%;">Skills <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('area', event)" style="width: 13%;">Area <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('person', event)">Person <span class="sort-indicator"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allProjects = [];
+        let filteredProjects = [];
+        let currentView = 'table';
+        let sortColumn = '';
+        let sortDirection = 'asc';
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',');
+            const projects = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                // Skip completely empty lines
+                if (!line) continue;
+                
+                const row = parseCSVLine(line);
+                // Only add if we have a valid title (non-empty, not just whitespace)
+                const title = (row[0] || '').trim();
+                if (title && title.length > 0) {
+                    projects.push({
+                        title: title,
+                        objective: (row[1] || '').trim(),
+                        context: (row[2] || '').trim(), // OutCome column
+                        skills: (row[3] || '').trim(),
+                        area: '', // Not in CSV, keeping for compatibility
+                        person: (row[4] || '').trim() // SuperVisior column
+                    });
+                }
+            }
+
+            return projects;
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+
+                if (char === '"' && inQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+
+        function parseHTMLTable(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const projects = [];
+            
+            // Try to find the specific table by ID first (from response.html)
+            let table = doc.querySelector('table#ContentPlaceHolder1_grd_project');
+            
+            if (!table) {
+                // Fallback: Try other selectors
+                const tableSelectors = [
+                    'table[id*="grd_project"]',
+                    'table[id*="Project"]',
+                    'table.table',
+                    'table'
+                ];
+                
+                for (const selector of tableSelectors) {
+                    table = doc.querySelector(selector);
+                    if (table) break;
+                }
+            }
+            
+            if (!table) {
+                console.warn('No table found in HTML');
+                return projects;
+            }
+            
+            const rows = table.querySelectorAll('tr');
+            if (rows.length < 2) return projects; // Need at least header + 1 data row
+            
+            // Check if this is the specific table structure from response.html
+            const isSpecificTable = table.id === 'ContentPlaceHolder1_grd_project';
+            
+            if (isSpecificTable) {
+                // Parse using the specific structure from response.html
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const cells = Array.from(row.querySelectorAll('td'));
+                    
+                    if (cells.length < 6) continue;
+                    
+                    // Structure: [0]=checkbox, [1]=title, [2]=objective, [3]=outcome, [4]=skills, [5]=supervisor
+                    const titleCell = cells[1];
+                    const titleDiv = titleCell.querySelector('div');
+                    const title = titleDiv ? titleDiv.textContent.trim() : titleCell.textContent.trim();
+                    
+                    const objectiveSpan = cells[2].querySelector('span');
+                    const objective = objectiveSpan ? objectiveSpan.textContent.trim() : cells[2].textContent.trim();
+                    
+                    const outcomeSpan = cells[3].querySelector('span');
+                    const outcome = outcomeSpan ? outcomeSpan.textContent.trim() : cells[3].textContent.trim();
+                    
+                    const skillsSpan = cells[4].querySelector('span');
+                    const skills = skillsSpan ? skillsSpan.textContent.trim() : cells[4].textContent.trim();
+                    
+                    const supervisorSpan = cells[5].querySelector('span');
+                    const supervisor = supervisorSpan ? supervisorSpan.textContent.trim() : cells[5].textContent.trim();
+                    
+                    if (title && title.length > 0) {
+                        projects.push({
+                            title: title,
+                            objective: objective,
+                            context: outcome,
+                            skills: skills,
+                            area: '',
+                            person: supervisor
+                        });
+                    }
+                }
+            } else {
+                // Generic table parsing (fallback)
+                const headerRow = rows[0];
+                const headers = Array.from(headerRow.querySelectorAll('th, td')).map(cell => 
+                    cell.textContent.trim().toLowerCase()
+                );
+                
+                const titleIdx = headers.findIndex(h => h.includes('title') || h.includes('project'));
+                const objectiveIdx = headers.findIndex(h => h.includes('objective') || h.includes('goal'));
+                const contextIdx = headers.findIndex(h => h.includes('context') || h.includes('outcome'));
+                const skillsIdx = headers.findIndex(h => h.includes('skill') || h.includes('technology'));
+                const personIdx = headers.findIndex(h => h.includes('supervisor') || h.includes('person'));
+                
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const cells = Array.from(row.querySelectorAll('td'));
+                    
+                    if (cells.length === 0) continue;
+                    
+                    const title = titleIdx >= 0 && cells[titleIdx] ? cells[titleIdx].textContent.trim() : '';
+                    const objective = objectiveIdx >= 0 && cells[objectiveIdx] ? cells[objectiveIdx].textContent.trim() : '';
+                    const context = contextIdx >= 0 && cells[contextIdx] ? cells[contextIdx].textContent.trim() : '';
+                    const skills = skillsIdx >= 0 && cells[skillsIdx] ? cells[skillsIdx].textContent.trim() : '';
+                    const person = personIdx >= 0 && cells[personIdx] ? cells[personIdx].textContent.trim() : '';
+                    
+                    if (title && title.length > 0) {
+                        projects.push({
+                            title: title,
+                            objective: objective,
+                            context: context,
+                            skills: skills,
+                            area: '',
+                            person: person
+                        });
+                    }
+                }
+            }
+            
+            return projects;
+        }
+
+        async function loadCSV() {
+            try {
+                const response = await fetch('response.html');
+                const html = await response.text();
+                const projects = parseHTMLTable(html);
+                
+                if (projects.length > 0) {
+                    allProjects = projects;
+                    filteredProjects = [...allProjects];
+                    populateFilters();
+                    updateStats();
+                    renderProjects();
+                } else {
+                    throw new Error('No projects found in response.html');
+                }
+            } catch (error) {
+                const errorMsg = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><h2>Error loading data</h2><p>Please make sure response.html is in the same folder.</p></div>';
+                document.getElementById('projectsList').innerHTML = errorMsg;
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 60px;"><div style="font-size: 2em; margin-bottom: 10px;">⚠️</div><div style="font-weight: 600; margin-bottom: 10px;">Error loading data</div><div>Please make sure response.html is in the same folder.</div></td></tr>';
+                console.error('Error loading from response.html:', error);
+            }
+        }
+
+        function populateFilters() {
+            const contexts = [...new Set(allProjects.map(p => p.context).filter(c => c))].sort();
+            const areas = [...new Set(allProjects.map(p => p.area).filter(a => a))].sort();
+            const persons = [...new Set(allProjects.map(p => p.person).filter(p => p))].sort();
+
+            const contextFilter = document.getElementById('contextFilter');
+            const areaFilter = document.getElementById('areaFilter');
+            const personFilter = document.getElementById('personFilter');
+
+            contexts.forEach(context => {
+                const option = document.createElement('option');
+                option.value = context;
+                option.textContent = context;
+                contextFilter.appendChild(option);
+            });
+
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                areaFilter.appendChild(option);
+            });
+
+            persons.forEach(person => {
+                const option = document.createElement('option');
+                option.value = person;
+                option.textContent = person;
+                personFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const contextFilter = document.getElementById('contextFilter').value;
+            const areaFilter = document.getElementById('areaFilter').value;
+            const personFilter = document.getElementById('personFilter').value;
+
+            filteredProjects = allProjects.filter(project => {
+                const matchesSearch = !search || 
+                    project.title.toLowerCase().includes(search) ||
+                    project.objective.toLowerCase().includes(search) ||
+                    (project.skills && project.skills.toLowerCase().includes(search)) ||
+                    (project.area && project.area.toLowerCase().includes(search));
+
+                const matchesContext = !contextFilter || project.context === contextFilter;
+                const matchesArea = !areaFilter || (project.area && project.area.includes(areaFilter));
+                const matchesPerson = !personFilter || project.person === personFilter;
+
+                return matchesSearch && matchesContext && matchesArea && matchesPerson;
+            });
+
+            updateStats();
+            renderProjects();
+        }
+
+        function updateStats() {
+            document.getElementById('totalProjects').textContent = allProjects.length;
+            document.getElementById('filteredProjects').textContent = filteredProjects.length;
+            
+            const uniqueAreas = new Set(allProjects.map(p => p.area).filter(a => a));
+            document.getElementById('uniqueAreas').textContent = uniqueAreas.size;
+        }
+
+        function renderProjects() {
+            if (currentView === 'cards') {
+                renderCardsView();
+            } else {
+                renderTableView();
+            }
+        }
+
+        function renderCardsView() {
+            const container = document.getElementById('projectsList');
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h2>No projects found</h2>
+                        <p>Try adjusting your filters or search terms</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredProjects.map(project => `
+                <div class="project-card">
+                    <div class="project-title">${project.title}</div>
+                    <div class="project-objective">${project.objective}</div>
+                    <div class="project-meta">
+                        ${project.context ? `<span class="tag tag-context">📄 ${project.context}</span>` : ''}
+                        ${project.skills ? `<span class="tag tag-skills">🛠️ ${project.skills}</span>` : ''}
+                        ${project.area ? `<span class="tag tag-area">🎯 ${project.area}</span>` : ''}
+                        ${project.person ? `<span class="tag tag-person">👤 ${project.person}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTableView() {
+                const tbody = document.getElementById('tableBody');
+
+                if (filteredProjects.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 60px;"><div>🔍</div><div>No projects found</div></td></tr>';
+                    return;
+                }
+
+                let rows = '';
+                filteredProjects.forEach(project => {
+                    rows += '<tr>' +
+                        `<td title="${project.title}">${project.title}</td>` +
+                        `<td title="${project.objective}">${project.objective}</td>` +
+                        `<td title="${project.context}">${project.context}</td>` +
+                        `<td title="${project.skills}">${project.skills}</td>` +
+                        `<td title="${project.area}">${project.area}</td>` +
+                        `<td title="${project.person}">${project.person}</td>` +
+                    '</tr>';
+                });
+                tbody.innerHTML = rows;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const cardsView = document.getElementById('cardsView');
+            const tableView = document.getElementById('tableView');
+            const buttons = document.querySelectorAll('.view-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'cards') {
+                cardsView.style.display = 'block';
+                tableView.style.display = 'none';
+                buttons[0].classList.add('active');
+                renderCardsView();
+            } else {
+                cardsView.style.display = 'none';
+                tableView.style.display = 'block';
+                buttons[1].classList.add('active');
+                renderTableView();
+            }
+        }
+
+        function sortTable(column, event) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredProjects.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+                
+                if (sortDirection === 'asc') {
+                    return aVal.localeCompare(bVal);
+                } else {
+                    return bVal.localeCompare(aVal);
+                }
+            });
+
+            // Update sort indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
+            if (event) {
+                const th = event.target.closest('th');
+                if (th) {
+                    const indicator = th.querySelector('.sort-indicator');
+                    if (indicator) {
+                        indicator.textContent = sortDirection === 'asc' ? '▲' : '▼';
+                    }
+                }
+            }
+
+            renderTableView();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('contextFilter').value = '';
+            document.getElementById('areaFilter').value = '';
+            document.getElementById('personFilter').value = '';
+            applyFilters();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('contextFilter').addEventListener('change', applyFilters);
+        document.getElementById('areaFilter').addEventListener('change', applyFilters);
+        document.getElementById('personFilter').addEventListener('change', applyFilters);
+
+        // Load data on page load
+        loadCSV();
+    </script>
+</body>
+</html>
+
